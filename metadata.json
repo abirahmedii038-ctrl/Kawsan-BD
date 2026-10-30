@@ -1,0 +1,8 @@
+{
+  "name": "VIONEX — Premium Fashion Bangladesh",
+  "description": "Exclusive contemporary fashion brand crafted with international quality, tailored for Bangladesh with BDT pricing and Cash on Delivery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

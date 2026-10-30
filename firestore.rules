@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'abirahmedii038@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128;
+    }
+
+    // Public catalog read, Admin managed
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public store settings read (name, phone, delivery charges, hero copy), Admin managed
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Customer orders
+    match /orders/{orderId} {
+      // Anyone can place an order as long as initial status is 'pending' and mandatory fields exist
+      allow create: if request.resource.data.orderNumber is string &&
+                       request.resource.data.customerPhone is string &&
+                       request.resource.data.total is number &&
+                       request.resource.data.status == 'pending';
+      
+      // Admin can list/read all orders. Customers can view individual order by document ID for tracking.
+      allow get: if true;
+      allow list: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Admin accounts
+    match /admins/{adminId} {
+      allow read: if isSignedIn() && (isAdmin() || request.auth.uid == adminId);
+      allow write: if isAdmin();
+    }
+  }
+}
